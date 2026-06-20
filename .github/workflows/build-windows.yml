@@ -20,17 +20,38 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install web dependencies
-        run: npm install --legacy-peer-deps
+        run: bun install --frozen-lockfile
 
       - name: Build web app as static site
-        run: npm run build
+        run: bun run build
         env:
           NITRO_PRESET: static
 
+      - name: Prepare static app for Electron
+        shell: pwsh
+        run: |
+          if (Test-Path ".output/public/index.html") {
+            $source = ".output/public"
+          } elseif (Test-Path "dist/index.html") {
+            $source = "dist"
+          } else {
+            Write-Host "Could not find built index.html. Existing index files:"
+            Get-ChildItem -Recurse -Filter index.html | ForEach-Object { Write-Host $_.FullName }
+            throw "Web build did not produce a static index.html"
+          }
+
+          $target = "electron/app/.output/public"
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item "$source/*" $target -Recurse -Force
+          Write-Host "Copied static app from $source to $target"
+
       - name: Install Electron dependencies
         working-directory: electron
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Build Windows installer (.exe)
         working-directory: electron
