@@ -11,9 +11,7 @@ let serverPort = 0;
 
 // ---------- USB detection (drivelist polling + usb hotplug events) ----------
 let drivelist = null;
-let usbDetect = null;
 try { drivelist = require("drivelist"); } catch (e) { console.warn("drivelist not loaded:", e.message); }
-try { usbDetect = require("usb-detection"); } catch (e) { console.warn("usb-detection not loaded:", e.message); }
 
 let knownDrives = new Map(); // mountpoint -> { label, size }
 
@@ -60,18 +58,9 @@ async function pollDrives() {
 }
 
 function startUsbWatchers() {
-  // Hot-plug events trigger immediate re-poll
-  if (usbDetect) {
-    try {
-      usbDetect.startMonitoring();
-      usbDetect.on("add", () => setTimeout(pollDrives, 800));
-      usbDetect.on("remove", () => setTimeout(pollDrives, 400));
-    } catch (e) { console.warn("usb-detection monitoring failed:", e); }
-  }
-  // Fallback poll every 2s in case events miss
-  setInterval(pollDrives, 2000);
-  // initial scan after window is ready
-  setTimeout(pollDrives, 1500);
+  // Fast polling (every 1s) — feels instant on USB insert/remove
+  setInterval(pollDrives, 1000);
+  setTimeout(pollDrives, 800);
 }
 
 // ---------- Recursive folder scan (size + file count) ----------
@@ -137,7 +126,6 @@ async function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-  try { if (usbDetect) usbDetect.stopMonitoring(); } catch {}
   if (process.platform !== "darwin") app.quit();
 });
 
