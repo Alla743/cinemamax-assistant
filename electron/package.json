@@ -27,13 +27,8 @@
     "files": [
       "main.cjs",
       "preload.cjs",
+      "app/**/*",
       "node_modules/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../.output/public",
-        "to": "app/.output/public"
-      }
     ],
     "asar": true,
     "asarUnpack": [

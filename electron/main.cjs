@@ -3,11 +3,8 @@
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
-const { spawn } = require("child_process");
 
 let mainWindow = null;
-let serverProcess = null;
-let serverPort = 0;
 
 // ---------- USB detection (drivelist polling + usb hotplug events) ----------
 let drivelist = null;
@@ -110,17 +107,34 @@ async function createWindow() {
     },
   });
 
-  // In production we ship a static export under resources/app/.output/public
-  const indexHtml = path.join(__dirname, "..", ".output", "public", "index.html");
-  try {
-    await fs.access(indexHtml);
+  const indexCandidates = [
+    path.join(__dirname, "app", ".output", "public", "index.html"),
+    path.join(process.resourcesPath || "", "app", ".output", "public", "index.html"),
+    path.join(__dirname, "..", ".output", "public", "index.html"),
+    path.join(__dirname, "..", "dist", "index.html"),
+  ];
+
+  const indexHtml = await findExistingFile(indexCandidates);
+  if (indexHtml) {
     await mainWindow.loadFile(indexHtml);
-  } catch {
+  } else {
     // Fallback: load dev server URL if running `electron .` during development
     await mainWindow.loadURL(process.env.VITE_DEV_URL || "http://localhost:5173");
   }
 
   startUsbWatchers();
+}
+
+async function findExistingFile(candidates) {
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch {
+      // try next path
+    }
+  }
+  return null;
 }
 
 app.whenReady().then(createWindow);
