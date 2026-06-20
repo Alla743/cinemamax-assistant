@@ -23,8 +23,11 @@ jobs:
       - name: Install web dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build web app (produces .output/public)
+      - name: Build web app as static site (produces .output/public/index.html)
         run: npm run build
+        env:
+          NITRO_PRESET: static
+
 
       - name: Install Electron dependencies (with native modules)
         working-directory: electron
