@@ -1,0 +1,60 @@
+{
+  "name": "cinemax-store-desktop",
+  "version": "1.0.0",
+  "description": "Cinemax Store — Windows desktop app (Electron wrapper)",
+  "private": true,
+  "main": "main.cjs",
+  "author": "Cinemax Store",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64"
+  },
+  "dependencies": {
+    "drivelist": "^12.0.2",
+    "usb-detection": "^4.14.2"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.cinemaxstore.app",
+    "productName": "Cinemax Store",
+    "copyright": "© Cinemax Store",
+    "directories": {
+      "output": "../release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../.output/public",
+        "to": "app/.output/public"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/usb-detection/**",
+      "**/node_modules/drivelist/**"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "artifactName": "Cinemax-Store-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cinemax Store",
+      "language": "1025"
+    }
+  }
+}
